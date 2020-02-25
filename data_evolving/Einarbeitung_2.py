@@ -6,6 +6,8 @@ Created on Sat Feb 15 12:46:36 2020
 import matplotlib.pyplot as plt
 import numpy as np
 
+#Zeit hinzufügen
+
 # LOAD DATA
 domainData = np.loadtxt('domain_y.dat', unpack=1) #unpack=1 to transpose the read in data in order to turn columns into arrays
 densData = np.loadtxt('dens0000050.txt', unpack=0)
