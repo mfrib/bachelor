@@ -1,3 +1,0 @@
-[console_scripts]
-simple_slider = simple_slider.__init__:main
-
