@@ -23,7 +23,7 @@ if __name__ == "__main__":
         license='GPLv3',
         packages=[PACKAGENAME],
         package_dir={PACKAGENAME: PACKAGENAME},
-        package_data={PACKAGENAME: ['data.csv']},
+        package_data={PACKAGENAME: ['data_*/*.dat']},
         install_requires=[
             'numpy',
             'matplotlib',

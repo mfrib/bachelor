@@ -5,9 +5,10 @@ import pkg_resources
 import argparse
 import os
 
+
 class Widget():
 
-    def __init__(self, fname=None):
+    def __init__(self, data_dir=None):
         """
         Initialize the widget to compare model and data
 
@@ -16,31 +17,24 @@ class Widget():
         """
 
         # Get the data
-        
+
         # redundant in this version
 
-        if fname is None:
-            fname = pkg_resources.resource_filename(__name__, 'data.dat')
-            
-        #data = np.loadtxt(fname)
-        #self.data = data
-                
-        fpath = os.path.dirname(__file__)
-        self.r     = np.loadtxt(os.path.join(fpath, 'radius.dat'))
-        self.sigma = np.loadtxt(os.path.join(fpath, 'sigma_averaged.dat'), unpack = 1)
-        self.t     = np.loadtxt(os.path.join(fpath, 'time.dat'))
-        #t = self.t
+        if data_dir is None:
+            data_dir = 'data_1_planet'
+
+        data_dir = pkg_resources.resource_filename(__name__, data_dir)
+
+        self.r     = np.loadtxt(os.path.join(data_dir, 'radius.dat'))
+        self.sigma = np.loadtxt(os.path.join(data_dir, 'sigma_averaged.dat'), unpack=1)
+        self.t     = np.loadtxt(os.path.join(data_dir, 'time.dat'))
 
         # Make the figure
 
         self.fig = plt.figure()
         self.ax = self.fig.add_axes([0.1, 0.3, 0.5, 0.6])
-        #self.ax.set_xscale('log')
 
-        
         # plot the reference profile
-
-        #self.data_line, = self.ax.loglog(r, sigma[:, 300], 'k-')
 
         # CREATE SLIDER(S)
 
@@ -48,7 +42,7 @@ class Widget():
         slider_y0 = 0.05
         slider_w  = self.ax.get_position().width
         slider_h  = 0.04
-        
+
         # slider for parameter T
 
         self._ax_T = self.fig.add_axes([slider_x0, slider_y0, slider_w, slider_h], facecolor="lightgoldenrodyellow")
@@ -69,15 +63,15 @@ class Widget():
 
         # calculate our toy model
 
-        #model = self.data[:, 0]**(-self._slider_T.val)
         time_model = self.sigma[:, int(self._slider_T.val)]
+
         # update the model line
 
         self.model_line.set_ydata(time_model)
 
         # update our slider title
 
-        self._ax_T.set_title("t= %.3e s" %self.t[int(self._slider_T.val)], fontsize='small')
+        self._ax_T.set_title("t= %.3e s" % self.t[int(self._slider_T.val)], fontsize='small')
 
         plt.draw()
 
@@ -89,7 +83,7 @@ def main():
     PARSER.add_argument('-d', '--data-path', help='path to the data files', type=str, default=None)
     ARGS  = PARSER.parse_args()
 
-    _ = Widget(fname=ARGS.data_path)
+    _ = Widget(data_dir=ARGS.data_path)
     plt.show()
 
 
