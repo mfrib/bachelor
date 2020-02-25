@@ -1,0 +1,32 @@
+Metadata-Version: 2.1
+Name: simple-slider
+Version: 0.0.1
+Summary: plotting results in a widget
+Home-page: til-birnstiel.de
+Author: Til Birnstiel
+Author-email: til.birnstiel@lmu.de
+License: GPLv3
+Description: # Slider widget
+        
+        Reads data from `data.dat` and displays it along with a model curve. One
+        parameter is implemented that can be selected on a slider and the model line
+        updates automatically.
+        
+        To install, run this from the place where this readme file is
+        
+            pip install -e .
+        
+        To get the widget,
+        
+        - either run `simple_slider` from the terminal
+        - or from within python do
+        
+            ```python
+            import simple_slider
+            simple_slider.Widget()
+            ```
+        
+        ![Figure](fig.png)
+        
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
