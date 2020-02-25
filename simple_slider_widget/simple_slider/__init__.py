@@ -17,15 +17,14 @@ class Widget():
 
         # Get the data
         
-                # Clean this up 
+        # redundant in this version
 
         if fname is None:
             fname = pkg_resources.resource_filename(__name__, 'data.dat')
-
+            
         #data = np.loadtxt(fname)
         #self.data = data
-
-                # till here 
+                
         fpath = os.path.dirname(__file__)
         self.r     = np.loadtxt(os.path.join(fpath, 'radius.dat'))
         self.sigma = np.loadtxt(os.path.join(fpath, 'sigma_averaged.dat'), unpack = 1)
@@ -49,7 +48,7 @@ class Widget():
         slider_y0 = 0.05
         slider_w  = self.ax.get_position().width
         slider_h  = 0.04
-
+        
         # slider for parameter T
 
         self._ax_T = self.fig.add_axes([slider_x0, slider_y0, slider_w, slider_h], facecolor="lightgoldenrodyellow")
@@ -96,5 +95,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-#print(t[int(self._slider_T.val)])

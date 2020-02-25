@@ -4,6 +4,7 @@ README.md
 setup.py
 simple_slider/Copy of __init__.py
 simple_slider/__init__.py
+simple_slider/read_snapshot.py
 simple_slider.egg-info/PKG-INFO
 simple_slider.egg-info/SOURCES.txt
 simple_slider.egg-info/dependency_links.txt
