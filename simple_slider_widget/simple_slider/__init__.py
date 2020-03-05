@@ -67,8 +67,8 @@ class Widget():
 
         slider_x0 = self.ax.get_position().x0
         slider_y0 = 0.05
-        slider_w = self.ax.get_position().width
-        slider_h = 0.04
+        slider_w  = self.ax.get_position().width
+        slider_h  = 0.04
 
         # get_model sliders size
 
@@ -150,36 +150,35 @@ class Widget():
         self._slider_sigma.on_changed(self.update)
 
         self._ax_Pow = self.fig.add_axes([slider_x1, slider_y1, slider_w1, slider_h1], facecolor="lightsalmon")
-        self._slider_Pow = w.Slider(self._ax_Pow, "a", -2, 0, valinit=-0.8, valfmt='%.2f')
+        self._slider_Pow = w.Slider(self._ax_Pow, "p", -2, 0, valinit=-0.8, valfmt='%.2f')
         self._ax_Pow.set_title("Power", fontsize='small')
         self._slider_Pow.on_changed(self.update)
         
-        self._ax_alpha = self.fig.add_axes([alpha_slider_x, alpha_slider_y, alpha_slider_w, alpha_slider_h], facecolor="lightsalmon")
+        self._ax_alpha = self.fig.add_axes([alpha_slider_x, alpha_slider_y, alpha_slider_w, alpha_slider_h], facecolor="mistyrose")
         self._slider_alpha = w.Slider(self._ax_alpha, "$\\alpha$", -4, -1, valinit=-3, valfmt='%.2f')
         self._ax_alpha.set_title("$\\alpha$", fontsize='small')
         self._slider_alpha.on_changed(self.update)
         
 
         self.model_line_A, = self.ax.loglog(self.r / au, np.ones_like(self.r))
-        self.planet_line,   = self.ax.loglog(self.r / au, np.ones_like(self.r)*2)
+        # self.planet_line,   = self.ax.loglog(self.r / au, np.ones_like(self.r)*2)
 
         # Planet sliders 1
         if self.planet[0] == 1:
+            
+            # planet Position in units of log10(AU)
             self._ax_rp1 = self.fig.add_axes([rp1_slider_x, rp1_slider_y, rp1_slider_w, rp1_slider_h], facecolor="salmon")
             self._slider_rp1 = w.Slider(self._ax_rp1, "$R_P$", r_min, r_max, valinit=r_min, valfmt='%.2f')
             self._ax_rp1.set_title("Planet position", fontsize='small')
             self._slider_rp1.on_changed(self.update)
 
-            
-            # planet mass in units of M_star
+            # planet mass in units of log10(M_star)
             self._ax_mp1 = self.fig.add_axes([mp1_slider_x, mp1_slider_y, mp1_slider_w, mp1_slider_h], facecolor="salmon")
             self._slider_mp1 = w.Slider(self._ax_mp1, "$M_P$", -4, -2, valinit=-4, valfmt='%.2f')
             self._ax_mp1.set_title("Planet Mass", fontsize='small')
             self._slider_mp1.on_changed(self.update)
 
             self.marker_planet_dist1, = self.ax.loglog(self.r[100] / au, self.sigma[-1, 0], marker='o', linestyle='None', markersize=10, color="salmon", markeredgecolor='black')
-            #self.marker_planet_dist12, = self.ax.loglog(20, 1, marker='o', linestyle='None', markersize=10, color="black", markeredgecolor='black')
-            #self.marker_planet_dist13, = self.ax.loglog(20, 1, marker='o', linestyle='None', markersize=10, color="green", markeredgecolor='black')
 
         # Planet slider 2
         if self.planet[1] == 1:
@@ -192,6 +191,7 @@ class Widget():
             self._slider_mp2 = w.Slider(self._ax_mp2, "$M_P$", -4, -2, valinit=-4, valfmt='%.2f')
             self._ax_mp2.set_title("Planet mass", fontsize='small')
             self._slider_mp2.on_changed(self.update)
+            
             self.marker_planet_dist2, = self.ax.loglog(self.r[0] / au, self.sigma[-1, 0], marker='o', linestyle='None', markersize=10, color="turquoise", markeredgecolor='black')
 
         # Planet sliders 3
@@ -211,65 +211,44 @@ class Widget():
 
 
         # call the callback function once to make the plot agree with state of the buttons
-        #print(self.f(10**self._slider_mp1.val, 10**(self._slider_rp1.val) * au))
-        #print("%.3g %.3g" % self.test(10**self._slider_mp1.val, 10**(self._slider_rp1.val) * au))
+
         self.update(None)
-        
+    
+    # calculate disturbance in sigma caused by planet in units of Sigma_0
     def f(self, mass_rel, R_p):
-        temp = 20 * (R_p / (100 * au))**-self.q
-        cs_p   = np.sqrt(k_b * temp / (mu * m_p))
-        h_p  = cs_p / np.sqrt(G * self.M_star / R_p**3)
-        K_prime = (mass_rel)**2 * (h_p/R_p)**-3 * 1 / (10**self._slider_alpha.val)
-        K = K_prime /((h_p/R_p)**2)
-        sig_min_0 = 1 / (1 + 0.04 * K)
-        R1 = (sig_min_0 / 4 + 0.08) * K_prime**(1/4) * R_p
-        R2 = 0.33 * K_prime**(1/4) * R_p
-        sig = np.ones_like(self.r)
         
-        for i in range(1024):
+        temp      = 20 * (R_p / (100 * au))**-self.q
+        cs_p      = np.sqrt(k_b * temp / (mu * m_p))
+        h_p       = cs_p / np.sqrt(G * self.M_star / R_p**3)
+        K_prime   = (mass_rel)**2 * (h_p/R_p)**-3 * 1 / (10**self._slider_alpha.val)
+        K         = K_prime /((h_p/R_p)**2)
+        sig_min_0 = 1 / (1 + 0.04 * K)
+        R1        = (sig_min_0 / 4 + 0.08) * K_prime**(1/4) * R_p
+        R2        = 0.33 * K_prime**(1/4) * R_p
+        sig       = np.ones_like(self.r)
+            
+        for i in range(len(self.r)):
             if np.abs(self.r[i] - R_p) < R1:
                 sig[i] = sig_min_0
             elif np.abs(self.r[i] - R_p) < R2:
                 sig[i] = 4.0 * K_prime**(-1/4) * np.abs(self.r[i] - R_p) / R_p - 0.32
         # sig in units of sig_0
-        return sig, h_p/R_p
-        
-    def test(self, mass_rel, R_p):
-        temp = 20 * (R_p / (100 * au))**-self.q
-        cs_p   = np.sqrt(k_b * temp / (mu * m_p))
-        h_p  = cs_p / np.sqrt(G * self.M_star / R_p**3)
-        K_prime = (mass_rel)**2 * (h_p/R_p)**-3 * 1 / (10**self._slider_alpha.val)
-        K = K_prime /((h_p/R_p)**2)
-        sig_min_0 = 1 / (1 + 0.04 * K)
-        
-        R1 = (sig_min_0 / 4 + 0.08) * K_prime**(1/4) * R_p
-        R2 = 0.33 * K_prime**(1/4) * R_p
-        sig = np.ones_like(self.r)
-        
-        for i in range(1024):
-            if np.abs(self.r[i] - R_p) < R1:
-                sig[i] = sig_min_0
-            elif np.abs(self.r[i] - R_p) < R2:
-                sig[i] = 4.0 * K_prime**(-1/4) * np.abs(self.r[i] - R_p) / R_p - 0.32
-        # sig in units of sig_0
-        
-        return h_p/R_p, h_p
-        
-        
-        
+        return sig, h_p, sig_min_0, K_prime       
+
+    # multiply power law with distubance of planets
 
     def get_model(self):
 
         sig_gas = 10**(self._slider_sigma.val) * (self.r / (100 * au))**(self._slider_Pow.val)
-        self.planet_dist1, self.planet_dist2, self.planet_dist3 = 0, 0, 0
+        self.planet_dist1, self.planet_dist2, self.planet_dist3 = 1, 1, 1
         if self.planet[0] == 1:
-            self.planet_dist1, self.hprp1 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
+            self.planet_dist1, self.hp1, self.sig_min1, self.K_prime1 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
 
         if self.planet[1] == 1:
-            self.planet_dist2, self.hprp2 = self.f(10**self._slider_mp2.val, 10**self._slider_rp2.val * au)
+            self.planet_dist2, self.hp2, self.sig_min2, self.K_prime2 = self.f(10**self._slider_mp2.val, 10**self._slider_rp2.val * au)
 
         if self.planet[2] == 1:
-            self.planet_dist3, self.hprp3 = self.f(10**self._slider_mp3.val, 10**self._slider_rp3.val * au)
+            self.planet_dist3, self.hp3, self.sig_min3, self.K_prime3 = self.f(10**self._slider_mp3.val, 10**self._slider_rp3.val * au)
         return sig_gas * self.planet_dist1 * self.planet_dist2 * self.planet_dist3
 
     def update(self, event):
@@ -280,7 +259,6 @@ class Widget():
         # calculate our toy model
         model_A = self.get_model()
         time_model = self.sigma[:, int(self._slider_T.val)]
-        plandist, test1234 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
 
         # MARKERS
         if self.planet[0] == 1:
@@ -288,13 +266,11 @@ class Widget():
             # disturbance of 1st planet
             """
             # marker shows x_0 position on model line, label returns analytical function
-            # analytical K = '$ \Sigma (r) = ((\\frac{{M_P}}{{M_\\odot}})^2 \\cdot (\\frac{{h_p}}{{R_p}})^{{-5}} \cdot \\alpha ^{{-1}})^{{-1/4}}$'
-            self.marker_planet_dist1.set_label('$ K = ((10^{{{{{:.2g}}}}})^2 \\cdot {{{:.3g}}}^{{-5}} \cdot {{{:.3g}}}^{{-1}})^{{-1/4}}$'.format(self._slider_mp1.val, self.hprp1, self._slider_alpha.val, self._slider_rp1.val))
+            self.marker_planet_dist1.set_label('$ \\Sigma_{{min}} = {{{:.2f}}}\\Sigma_0, \\frac{{\\Sigma_{{gap}}}}{{\\Sigma_0}} = {{{:.2f}}} \\cdot \\frac{{\\left| R-{{{:.2f}}} \\right|}}{{{{{:.2f}}}}}-0.32$'.format(self.sig_min1, 4*self.K_prime1**(1/4), 10**self._slider_rp1.val, 10**self._slider_rp1.val))
             self.marker_planet_dist1.set_xdata(10**self._slider_rp1.val)
-            self._ax_mp1.set_title("$M = {{{:.2e}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
-            self._ax_rp1.set_title("$R_P = {{{:.2f}}} AU$".format(self._slider_rp1.val, fontsize='small'))
+            self._ax_mp1.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
+            self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.hp1 / au, fontsize='small'))
             
-            # test1, test2 = self.test(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
             # self.marker_planet_dist12.set_xdata(10**self._slider_rp1.val + test1 / au)
             # self.marker_planet_dist13.set_xdata(10**self._slider_rp1.val + test2 / au) #green
             self.marker_planet_dist1.set_ydata(np.interp(10**self._slider_rp1.val, self.r / au, model_A))
@@ -304,10 +280,10 @@ class Widget():
             # disturbance of 2nd planet
             """
             # marker for 2nd Gaussian and label
-            #self.marker_planet_dist2.set_label('$A_2 \\cdot e^{{-\\frac{{1}}{{2}}(\\frac{{r-r_0}}{{w_0}})^2}} = {{{:1.2g}}} \\cdot e^{{-\\frac{{1}}{{2}}(\\frac{{r-{{{:.2f}}}}}{{1 }})^2}}$'.format(self._slider_mp2.val, self._slider_rp2.val))
+            self.marker_planet_dist2.set_label('$ \\Sigma_{{min}} = {{{:.2f}}}\\Sigma_0, \\frac{{\\Sigma_{{gap}}}}{{\\Sigma_0}} = {{{:.2f}}} \\cdot \\frac{{\\left| R-{{{:.2f}}} \\right|}}{{{{{:.2f}}}}}-0.32$'.format(self.sig_min2, 4*self.K_prime2**(1/4), 10**self._slider_rp2.val, 10**self._slider_rp2.val))
             self.marker_planet_dist2.set_xdata(10**self._slider_rp2.val)
-            self._ax_mp2.set_title("$M = {{{:.2e}}} M_\\odot$".format(10**self._slider_mp2.val, fontsize='small'))
-            self._ax_rp2.set_title("$R_P = {{{:.2f}}} AU$".format(self._slider_rp2.val, fontsize='small'))
+            self._ax_mp2.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp2.val, fontsize='small'))
+            self._ax_rp2.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp2.val, self.hp2 / au, fontsize='small'))
             self.marker_planet_dist2.set_ydata(np.interp(10**self._slider_rp2.val, self.r / au, model_A))
 
         if self.planet[2] == 1:
@@ -315,27 +291,26 @@ class Widget():
             # disturbarce of 3rd planet
             """
             # marker and label for 3rd Gaussian
-            # self.marker_planet_dist3.set_label('$A_3 \\cdot e^{{-\\frac{{1}}{{2}}(\\frac{{r-r_0}}{{w_0}})^2}} = {{{:1.2g}}} \\cdot e^{{-\\frac{{1}}{{2}}(\\frac{{r-{{{:.2f}}}}}{{1 }})^2}}$'.format(self._slider_mp3.val, self._slider_rp3.val))
+            self.marker_planet_dist3.set_label('$ \\Sigma_{{min}} = {{{:.2f}}}\\Sigma_0, \\frac{{\\Sigma_{{gap}}}}{{\\Sigma_0}} = {{{:.2f}}} \\cdot \\frac{{\\left| R-{{{:.2f}}} \\right|}}{{{{{:.2f}}}}}-0.32$'.format(self.sig_min3, 4*self.K_prime3**(1/4), 10**self._slider_rp3.val, 10**self._slider_rp3.val))
             self.marker_planet_dist3.set_xdata(10**self._slider_rp3.val)
             self.marker_planet_dist3.set_ydata(np.interp(10**self._slider_rp3.val, self.r / au, model_A))
-            self._ax_mp3.set_title("$M = {{{:.2e}}} M_\\odot$".format(10**self._slider_mp3.val, fontsize='small'))
-            self._ax_rp3.set_title("$R_P = {{{:.2f}}} AU$".format(self._slider_rp3.val, fontsize='small'))
-
-        # model_A = model_A_0 * (1 - planet_dist1 - planet_dist2 - planet_dist3)
+            self._ax_mp3.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp3.val, fontsize='small'))
+            self._ax_rp3.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp3.val, self.hp3 / au, fontsize='small'))
 
         # update the model line
 
         self.model_line_T.set_ydata(time_model)
         self.model_line_A.set_ydata(model_A)
-        self.planet_line.set_ydata(plandist)
+        # self.planet_line.set_ydata(self.planet_dist1)
 
         # update our slider title
 
         self._ax_T.set_title("t= %.3g a" % (self.t[int(self._slider_T.val)] / (365.25 * 24 * 3600)), fontsize='small')
-        self._ax_sigma.set_title("$\\Sigma_0 = 10^{{{:.2f}}}$".format(self._slider_sigma.val, fontsize='small'))
-        self._ax_Pow.set_title("$a = {{{:.2f}}}$".format(self._slider_Pow.val), fontsize='small')
+        self._ax_sigma.set_title("$\\Sigma_0 = 10^{{{:.2g}}}$".format(self._slider_sigma.val, fontsize='small'))
+        self._ax_Pow.set_title("$p = {{{:.2g}}}$".format(self._slider_Pow.val), fontsize='small')
+        self._ax_alpha.set_title("$\\alpha = 10^{{{:.2g}}}$".format(self._slider_alpha.val, fontsize='small'))
         self.model_line_A.set_label(r'$ \Sigma_0 \cdot r^a = {{{:0.4g}}} \cdot r^{{{:.2g}}}$'.format(10**self._slider_sigma.val, self._slider_Pow.val))
-        self.ax.legend(fontsize=15)
+        self.ax.legend(fontsize=13)
 
         # planet simulations
 
