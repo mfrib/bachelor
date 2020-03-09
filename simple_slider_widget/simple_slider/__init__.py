@@ -88,7 +88,6 @@ class Widget():
         alpha_slider_w = self.ax.get_position().width * 0.4
         alpha_slider_h = 0.04
 
-
         # Gaussian sliders size
         # 1st planet, r_0 offset
         rp1_slider_x = 1 - 2.5 * self.ax.get_position().x0
@@ -102,7 +101,6 @@ class Widget():
         mp1_slider_w = rp1_slider_w
         mp1_slider_h = 0.04
 
-
         # 2nd planet, r_0 offset
         rp2_slider_x = rp1_slider_x
         rp2_slider_y = 1 - 0.1 - 7.5 * rp1_slider_h
@@ -114,7 +112,6 @@ class Widget():
         mp2_slider_y = 1 - 0.1 - 9.5 * rp1_slider_h
         mp2_slider_w = rp1_slider_w
         mp2_slider_h = 0.04
-
 
         # 3rd planet, r_0 offset
         rp3_slider_x = rp1_slider_x
@@ -218,18 +215,18 @@ class Widget():
         temp      = 20 * (R_p / (100 * au))**-self.q
         cs_p      = np.sqrt(k_b * temp / (mu * m_p))
         h_p       = cs_p / np.sqrt(G * self.M_star / R_p**3)
-        K_prime   = (mass_rel)**2 * (h_p/R_p)**-3 * 1 / (10**self._slider_alpha.val)
-        K         = K_prime /((h_p/R_p)**2)
+        K_prime   = (mass_rel)**2 * (h_p / R_p)**-3 * 1 / (10**self._slider_alpha.val)
+        K         = K_prime / ((h_p / R_p)**2)
         sig_min_0 = 1 / (1 + 0.04 * K)
-        R1        = (sig_min_0 / 4 + 0.08) * K_prime**(1/4) * R_p
-        R2        = 0.33 * K_prime**(1/4) * R_p
+        R1        = (sig_min_0 / 4 + 0.08) * K_prime**(1 / 4) * R_p
+        R2        = 0.33 * K_prime**(1 / 4) * R_p
         sig       = np.ones_like(self.r)
 
         for i in range(len(self.r)):
             if np.abs(self.r[i] - R_p) < R1:
                 sig[i] = sig_min_0
             elif np.abs(self.r[i] - R_p) < R2:
-                sig[i] = 4.0 * K_prime**(-1/4) * np.abs(self.r[i] - R_p) / R_p - 0.32
+                sig[i] = 4.0 * K_prime**(-1 / 4) * np.abs(self.r[i] - R_p) / R_p - 0.32
         # sig in units of sig_0
         return sig, h_p, sig_min_0, K_prime
 
@@ -365,7 +362,7 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
     return sig_gas
 
 
-def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio):
+def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     """Kanagawa planetary gap profile.
 
     Returns the Kanagawa profile for a planetary gap on the array
@@ -393,16 +390,23 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio):
 
     K_prime = mass_ratio**2 * aspect_ratio**-3 / alpha
     K = K_prime / (aspect_ratio**2)
-    sig_min_0 = 1 / (1 + 0.04 * K)
-    R1 = (sig_min_0 / 4 + 0.08) * K_prime**(1 / 4)
+    fact_min_0 = 1 / (1 + 0.04 * K)
+    R1 = (fact_min_0 / 4 + 0.08) * K_prime**(1 / 4)
     R2 = 0.33 * K_prime**(1 / 4)
-    sig = np.ones_like(x)
+    fact = np.ones_like(x)
 
     mask = np.abs(x - 1) < R2
-    sig[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32
-    sig[np.abs(x - 1) < R1] = sig_min_0
+    fact[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32
+    fact[np.abs(x - 1) < R1] = fact_min_0
 
-    return sig
+    # smoothing
+
+    smooth = 2.5
+    x_h    = (mass_ratio / 3.)**(1. / 3.)
+    x_s    = smooth * x_h
+    fact   = np.exp(np.log(fact) * np.exp(-0.5 * (x - 1)**4 / x_s**4))
+
+    return fact
 
 
 def main():
