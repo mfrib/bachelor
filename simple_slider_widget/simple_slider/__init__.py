@@ -48,6 +48,7 @@ class Widget():
         # define disk properties, for now hard-coded
 
         self.M_star = M_sun
+        self.alpha  = 1e-3
         self.q      = 0.5
         self.T      = 20 * (self.r / (100 * au))**-self.q
         self.cs     = np.sqrt(k_b * self.T / (mu * m_p))
@@ -81,7 +82,7 @@ class Widget():
         slider_y1 = 1 - 0.1 - 19 * slider_h
         slider_w1 = self.ax.get_position().width * 0.4
         slider_h1 = 0.04
-        
+
         alpha_slider_x = self.ax.get_position().x0
         alpha_slider_y = 1 - 0.1 - 17 * slider_h
         alpha_slider_w = self.ax.get_position().width * 0.4
@@ -153,19 +154,18 @@ class Widget():
         self._slider_Pow = w.Slider(self._ax_Pow, "p", -2, 0, valinit=-0.8, valfmt='%.2f')
         self._ax_Pow.set_title("Power", fontsize='small')
         self._slider_Pow.on_changed(self.update)
-        
+
         self._ax_alpha = self.fig.add_axes([alpha_slider_x, alpha_slider_y, alpha_slider_w, alpha_slider_h], facecolor="mistyrose")
-        self._slider_alpha = w.Slider(self._ax_alpha, "$\\alpha$", -4, -1, valinit=-3, valfmt='%.2f')
+        self._slider_alpha = w.Slider(self._ax_alpha, "$\\alpha$", -4, -1, valinit=np.log10(self.alpha), valfmt='%.2f')
         self._ax_alpha.set_title("$\\alpha$", fontsize='small')
         self._slider_alpha.on_changed(self.update)
-        
 
         self.model_line_A, = self.ax.loglog(self.r / au, np.ones_like(self.r))
         # self.planet_line,   = self.ax.loglog(self.r / au, np.ones_like(self.r)*2)
 
         # Planet sliders 1
         if self.planet[0] == 1:
-            
+
             # planet Position in units of log10(AU)
             self._ax_rp1 = self.fig.add_axes([rp1_slider_x, rp1_slider_y, rp1_slider_w, rp1_slider_h], facecolor="salmon")
             self._slider_rp1 = w.Slider(self._ax_rp1, "$R_P$", r_min, r_max, valinit=r_min, valfmt='%.2f')
@@ -191,7 +191,7 @@ class Widget():
             self._slider_mp2 = w.Slider(self._ax_mp2, "$M_P$", -4, -2, valinit=-4, valfmt='%.2f')
             self._ax_mp2.set_title("Planet mass", fontsize='small')
             self._slider_mp2.on_changed(self.update)
-            
+
             self.marker_planet_dist2, = self.ax.loglog(self.r[0] / au, self.sigma[-1, 0], marker='o', linestyle='None', markersize=10, color="turquoise", markeredgecolor='black')
 
         # Planet sliders 3
@@ -205,18 +205,16 @@ class Widget():
             self._slider_mp3 = w.Slider(self._ax_mp3, "$M_P$", -4, -2, valinit=-4, valfmt='%.2f')
             self._ax_mp3.set_title("planet mass", fontsize='small')
             self._slider_mp3.on_changed(self.update)
-            
+
             self.marker_planet_dist3, = self.ax.loglog(self.r[0] / au, self.sigma[-1, 0], marker='o', linestyle='None', markersize=10, color="khaki", markeredgecolor='black')
-
-
 
         # call the callback function once to make the plot agree with state of the buttons
 
         self.update(None)
-    
+
     # calculate disturbance in sigma caused by planet in units of Sigma_0
     def f(self, mass_rel, R_p):
-        
+
         temp      = 20 * (R_p / (100 * au))**-self.q
         cs_p      = np.sqrt(k_b * temp / (mu * m_p))
         h_p       = cs_p / np.sqrt(G * self.M_star / R_p**3)
@@ -226,30 +224,51 @@ class Widget():
         R1        = (sig_min_0 / 4 + 0.08) * K_prime**(1/4) * R_p
         R2        = 0.33 * K_prime**(1/4) * R_p
         sig       = np.ones_like(self.r)
-            
+
         for i in range(len(self.r)):
             if np.abs(self.r[i] - R_p) < R1:
                 sig[i] = sig_min_0
             elif np.abs(self.r[i] - R_p) < R2:
                 sig[i] = 4.0 * K_prime**(-1/4) * np.abs(self.r[i] - R_p) / R_p - 0.32
         # sig in units of sig_0
-        return sig, h_p, sig_min_0, K_prime       
+        return sig, h_p, sig_min_0, K_prime
 
     # multiply power law with distubance of planets
 
     def get_model(self):
 
-        sig_gas = 10**(self._slider_sigma.val) * (self.r / (100 * au))**(self._slider_Pow.val)
-        self.planet_dist1, self.planet_dist2, self.planet_dist3 = 1, 1, 1
+        # the widget side
+
+        R_p = []
+        h_p = []
+        mass_ratios = []
+        alpha = self.alpha
+        p = self._slider_Pow.val
+        sig0 = 10**(self._slider_sigma.val)
+
         if self.planet[0] == 1:
-            self.planet_dist1, self.hp1, self.sig_min1, self.K_prime1 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
+            R_p += [10**self._slider_rp1.val * au]
+            self.hp1 = np.interp(R_p, self.r, self.h)
+            h_p += [self.hp1]
+            mass_ratios += [10**self._slider_mp1.val]
 
         if self.planet[1] == 1:
-            self.planet_dist2, self.hp2, self.sig_min2, self.K_prime2 = self.f(10**self._slider_mp2.val, 10**self._slider_rp2.val * au)
+            R_p += [10**self._slider_rp2.val * au]
+            self.hp2 = np.interp(R_p, self.r, self.h)
+            h_p += [self.hp2]
+            mass_ratios += [10**self._slider_mp1.val]
 
         if self.planet[2] == 1:
-            self.planet_dist3, self.hp3, self.sig_min3, self.K_prime3 = self.f(10**self._slider_mp3.val, 10**self._slider_rp3.val * au)
-        return sig_gas * self.planet_dist1 * self.planet_dist2 * self.planet_dist3
+            R_p += [10**self._slider_rp3.val * au]
+            self.hp1 = np.interp(R_p, self.r, self.h)
+            h_p += [self.hp1]
+            mass_ratios += [10**self._slider_mp3.val]
+
+        # the model side
+
+        sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, h_p, mass_ratios)
+
+        return sig_gas
 
     def update(self, event):
         """
@@ -259,6 +278,7 @@ class Widget():
         # calculate our toy model
         model_A = self.get_model()
         time_model = self.sigma[:, int(self._slider_T.val)]
+        self.alpha = 10.**self._slider_alpha.val
 
         # MARKERS
         if self.planet[0] == 1:
@@ -266,11 +286,10 @@ class Widget():
             # disturbance of 1st planet
             """
             # marker shows x_0 position on model line, label returns analytical function
-            self.marker_planet_dist1.set_label('$ \\Sigma_{{min}} = {{{:.2f}}}\\Sigma_0, \\frac{{\\Sigma_{{gap}}}}{{\\Sigma_0}} = {{{:.2f}}} \\cdot \\frac{{\\left| R-{{{:.2f}}} \\right|}}{{{{{:.2f}}}}}-0.32$'.format(self.sig_min1, 4*self.K_prime1**(1/4), 10**self._slider_rp1.val, 10**self._slider_rp1.val))
             self.marker_planet_dist1.set_xdata(10**self._slider_rp1.val)
             self._ax_mp1.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
             self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.hp1 / au, fontsize='small'))
-            
+
             # self.marker_planet_dist12.set_xdata(10**self._slider_rp1.val + test1 / au)
             # self.marker_planet_dist13.set_xdata(10**self._slider_rp1.val + test2 / au) #green
             self.marker_planet_dist1.set_ydata(np.interp(10**self._slider_rp1.val, self.r / au, model_A))
@@ -280,7 +299,6 @@ class Widget():
             # disturbance of 2nd planet
             """
             # marker for 2nd Gaussian and label
-            self.marker_planet_dist2.set_label('$ \\Sigma_{{min}} = {{{:.2f}}}\\Sigma_0, \\frac{{\\Sigma_{{gap}}}}{{\\Sigma_0}} = {{{:.2f}}} \\cdot \\frac{{\\left| R-{{{:.2f}}} \\right|}}{{{{{:.2f}}}}}-0.32$'.format(self.sig_min2, 4*self.K_prime2**(1/4), 10**self._slider_rp2.val, 10**self._slider_rp2.val))
             self.marker_planet_dist2.set_xdata(10**self._slider_rp2.val)
             self._ax_mp2.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp2.val, fontsize='small'))
             self._ax_rp2.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp2.val, self.hp2 / au, fontsize='small'))
@@ -291,7 +309,6 @@ class Widget():
             # disturbarce of 3rd planet
             """
             # marker and label for 3rd Gaussian
-            self.marker_planet_dist3.set_label('$ \\Sigma_{{min}} = {{{:.2f}}}\\Sigma_0, \\frac{{\\Sigma_{{gap}}}}{{\\Sigma_0}} = {{{:.2f}}} \\cdot \\frac{{\\left| R-{{{:.2f}}} \\right|}}{{{{{:.2f}}}}}-0.32$'.format(self.sig_min3, 4*self.K_prime3**(1/4), 10**self._slider_rp3.val, 10**self._slider_rp3.val))
             self.marker_planet_dist3.set_xdata(10**self._slider_rp3.val)
             self.marker_planet_dist3.set_ydata(np.interp(10**self._slider_rp3.val, self.r / au, model_A))
             self._ax_mp3.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp3.val, fontsize='small'))
@@ -315,6 +332,77 @@ class Widget():
         # planet simulations
 
         plt.draw()
+
+
+def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
+    """
+    Create a power-law surface density profile with multiple planetary gaps.
+
+    Arguments:
+    ----------
+
+    radius : array
+        radial grid
+
+    ...
+
+    radii : list
+        list of planetary positions
+
+    heights : list
+        list of pressure scale height at the planet positionss
+
+    masses : list
+        the mass ratios for each planet
+    """
+    sig_gas = sig_0 * (radius / (100 * au))**p
+
+    ...
+
+    for r_p, h, mass in zip(radii, heights, masses):
+        sig_gas *= kanagawa_profile(...)
+
+    return sig_gas
+
+
+def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio):
+    """Kanagawa planetary gap profile.
+
+    Returns the Kanagawa profile for a planetary gap on the array
+    x where x = r / R_p.
+
+    Arguments:
+    ----------
+
+    x : array
+        radial coordinate in terms of the planet position
+
+    alpha : float
+        tubrulence parameter
+
+    aspect_ratio : float
+        h / r at the position of the planet
+
+    mass_ratio : float
+        planet to star mass ratio
+
+    Output:
+    -------
+    surface density profile in units of the original surface density.
+    """
+
+    K_prime = mass_ratio**2 * aspect_ratio**-3 / alpha
+    K = K_prime / (aspect_ratio**2)
+    sig_min_0 = 1 / (1 + 0.04 * K)
+    R1 = (sig_min_0 / 4 + 0.08) * K_prime**(1 / 4)
+    R2 = 0.33 * K_prime**(1 / 4)
+    sig = np.ones_like(x)
+
+    mask = np.abs(x - 1) < R2
+    sig[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32
+    sig[np.abs(x - 1) < R1] = sig_min_0
+
+    return sig
 
 
 def main():
