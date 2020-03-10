@@ -239,30 +239,30 @@ class Widget():
         R_p = []
         h_p = []
         mass_ratios = []
-        alpha = self.alpha
+        alpha = 10**self._slider_alpha.val
         p = self._slider_Pow.val
         sig0 = 10**(self._slider_sigma.val)
 
         if self.planet[0] == 1:
             R_p += [10**self._slider_rp1.val * au]
-            self.hp1 = np.interp(R_p, self.r, self.h)
+            self.hp1 = np.interp(R_p, self.r, self.h)[0]
             h_p += [self.hp1]
             mass_ratios += [10**self._slider_mp1.val]
 
         if self.planet[1] == 1:
             R_p += [10**self._slider_rp2.val * au]
-            self.hp2 = np.interp(R_p, self.r, self.h)
+            self.hp2 = np.interp(R_p, self.r, self.h)[1]
             h_p += [self.hp2]
-            mass_ratios += [10**self._slider_mp1.val]
+            mass_ratios += [10**self._slider_mp2.val]
 
         if self.planet[2] == 1:
             R_p += [10**self._slider_rp3.val * au]
-            self.hp1 = np.interp(R_p, self.r, self.h)
-            h_p += [self.hp1]
+            self.hp3 = np.interp(R_p, self.r, self.h)[2]
+            h_p += [self.hp3]
             mass_ratios += [10**self._slider_mp3.val]
 
         # the model side
-
+        
         sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, h_p, mass_ratios)
 
         return sig_gas
@@ -286,9 +286,6 @@ class Widget():
             self.marker_planet_dist1.set_xdata(10**self._slider_rp1.val)
             self._ax_mp1.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
             self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.hp1 / au, fontsize='small'))
-
-            # self.marker_planet_dist12.set_xdata(10**self._slider_rp1.val + test1 / au)
-            # self.marker_planet_dist13.set_xdata(10**self._slider_rp1.val + test2 / au) #green
             self.marker_planet_dist1.set_ydata(np.interp(10**self._slider_rp1.val, self.r / au, model_A))
 
         if self.planet[1] == 1:
@@ -323,7 +320,7 @@ class Widget():
         self._ax_sigma.set_title("$\\Sigma_0 = 10^{{{:.2g}}}$".format(self._slider_sigma.val, fontsize='small'))
         self._ax_Pow.set_title("$p = {{{:.2g}}}$".format(self._slider_Pow.val), fontsize='small')
         self._ax_alpha.set_title("$\\alpha = 10^{{{:.2g}}}$".format(self._slider_alpha.val, fontsize='small'))
-        self.model_line_A.set_label(r'$ \Sigma_0 \cdot r^a = {{{:0.4g}}} \cdot r^{{{:.2g}}}$'.format(10**self._slider_sigma.val, self._slider_Pow.val))
+        self.model_line_A.set_label(r'$ \Sigma_0 \cdot r^a = {{{:0.4g}}} \cdot (\frac{{r}}{{100AU}})^{{{:.2g}}}$'.format(10**self._slider_sigma.val, self._slider_Pow.val))
         self.ax.legend(fontsize=13)
 
         # planet simulations
@@ -341,7 +338,14 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
     radius : array
         radial grid
 
-    ...
+    alpha : float
+        turbulance parameter
+        
+    sig_0 : float
+        base surface density profile without power law (at r = 1)
+        
+    p : float
+        power to which radius is taken in surface density profile
 
     radii : list
         list of planetary positions
@@ -351,13 +355,17 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
 
     masses : list
         the mass ratios for each planet
+        
+    Output:
+    -------
+        surface density profile with planetary gaps in cgs units.
     """
     sig_gas = sig_0 * (radius / (100 * au))**p
 
-    ...
+    #...
 
     for r_p, h, mass in zip(radii, heights, masses):
-        sig_gas *= kanagawa_profile(...)
+        sig_gas *= kanagawa_profile(radius / r_p, alpha, h / r_p, mass)
 
     return sig_gas
 
@@ -394,7 +402,7 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     R1 = (fact_min_0 / 4 + 0.08) * K_prime**(1 / 4)
     R2 = 0.33 * K_prime**(1 / 4)
     fact = np.ones_like(x)
-
+    #print(np.shape(R1))
     mask = np.abs(x - 1) < R2
     fact[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32
     fact[np.abs(x - 1) < R1] = fact_min_0
