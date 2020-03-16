@@ -237,7 +237,6 @@ class Widget():
         # the widget side
 
         R_p = []
-        h_p = []
         mass_ratios = []
         alpha = 10**self._slider_alpha.val
         p = self._slider_Pow.val
@@ -245,22 +244,24 @@ class Widget():
 
         if self.planet[0] == 1:
             R_p += [10**self._slider_rp1.val * au]
-            self.hp1 = np.interp(R_p, self.r, self.h)[0]
-            h_p += [self.hp1]
+            #self.hp1 = np.interp(R_p, self.r, self.h)[0]
+            #h_p += [self.hp1]
             mass_ratios += [10**self._slider_mp1.val]
 
         if self.planet[1] == 1:
             R_p += [10**self._slider_rp2.val * au]
-            self.hp2 = np.interp(R_p, self.r, self.h)[1]
-            h_p += [self.hp2]
+            #self.hp2 = np.interp(R_p, self.r, self.h)[1]
+            #h_p += [self.hp2]
             mass_ratios += [10**self._slider_mp2.val]
 
         if self.planet[2] == 1:
             R_p += [10**self._slider_rp3.val * au]
-            self.hp3 = np.interp(R_p, self.r, self.h)[2]
-            h_p += [self.hp3]
+            #self.hp3 = np.interp(R_p, self.r, self.h)[2]
+            #h_p += [self.hp3]
             mass_ratios += [10**self._slider_mp3.val]
-
+            
+        self.h_p = np.interp(R_p, self.r, self.h)
+        h_p = self.h_p
         # the model side
         
         sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, h_p, mass_ratios)
@@ -285,7 +286,7 @@ class Widget():
             # marker shows x_0 position on model line, label returns analytical function
             self.marker_planet_dist1.set_xdata(10**self._slider_rp1.val)
             self._ax_mp1.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
-            self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.hp1 / au, fontsize='small'))
+            self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.h_p[0] / au, fontsize='small'))
             self.marker_planet_dist1.set_ydata(np.interp(10**self._slider_rp1.val, self.r / au, model_A))
 
         if self.planet[1] == 1:
@@ -295,7 +296,7 @@ class Widget():
             # marker for 2nd Gaussian and label
             self.marker_planet_dist2.set_xdata(10**self._slider_rp2.val)
             self._ax_mp2.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp2.val, fontsize='small'))
-            self._ax_rp2.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp2.val, self.hp2 / au, fontsize='small'))
+            self._ax_rp2.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp2.val, self.h_p[1] / au, fontsize='small'))
             self.marker_planet_dist2.set_ydata(np.interp(10**self._slider_rp2.val, self.r / au, model_A))
 
         if self.planet[2] == 1:
@@ -306,7 +307,7 @@ class Widget():
             self.marker_planet_dist3.set_xdata(10**self._slider_rp3.val)
             self.marker_planet_dist3.set_ydata(np.interp(10**self._slider_rp3.val, self.r / au, model_A))
             self._ax_mp3.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp3.val, fontsize='small'))
-            self._ax_rp3.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp3.val, self.hp3 / au, fontsize='small'))
+            self._ax_rp3.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp3.val, self.h_p[2] / au, fontsize='small'))
 
         # update the model line
 
@@ -351,10 +352,10 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
         list of planetary positions
 
     heights : list
-        list of pressure scale height at the planet positionss
+        list of pressure scale height at the planet positions
 
     masses : list
-        the mass ratios for each planet
+        the mass ratios of planet relative to star for each planet
         
     Output:
     -------
