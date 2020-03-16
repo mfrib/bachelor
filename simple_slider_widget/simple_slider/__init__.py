@@ -227,6 +227,7 @@ class Widget():
                 sig[i] = sig_min_0
             elif np.abs(self.r[i] - R_p) < R2:
                 sig[i] = 4.0 * K_prime**(-1 / 4) * np.abs(self.r[i] - R_p) / R_p - 0.32
+        
         # sig in units of sig_0
         return sig, h_p, sig_min_0, K_prime
 
@@ -244,27 +245,22 @@ class Widget():
 
         if self.planet[0] == 1:
             R_p += [10**self._slider_rp1.val * au]
-            #self.hp1 = np.interp(R_p, self.r, self.h)[0]
-            #h_p += [self.hp1]
             mass_ratios += [10**self._slider_mp1.val]
 
         if self.planet[1] == 1:
             R_p += [10**self._slider_rp2.val * au]
-            #self.hp2 = np.interp(R_p, self.r, self.h)[1]
-            #h_p += [self.hp2]
             mass_ratios += [10**self._slider_mp2.val]
 
         if self.planet[2] == 1:
             R_p += [10**self._slider_rp3.val * au]
-            #self.hp3 = np.interp(R_p, self.r, self.h)[2]
-            #h_p += [self.hp3]
             mass_ratios += [10**self._slider_mp3.val]
             
         self.h_p = np.interp(R_p, self.r, self.h)
-        h_p = self.h_p
+        # self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
+        
         # the model side
         
-        sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, h_p, mass_ratios)
+        sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, self.h_p, mass_ratios)
 
         return sig_gas
 
@@ -327,6 +323,19 @@ class Widget():
         # planet simulations
 
         plt.draw()
+        
+def get_disk_height(R):
+    """
+    calculate disk height profile from temperature model
+    
+    """    
+    M_star = M_sun
+    q      = 0.5
+    T      = 20 * (R / (100 * au))**-q
+    cs     = np.sqrt(k_b * T / (mu * m_p))
+    om     = np.sqrt(G * M_star / R**3)
+    h      = cs / om
+    return h
 
 
 def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
@@ -362,9 +371,10 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
         surface density profile with planetary gaps in cgs units.
     """
     sig_gas = sig_0 * (radius / (100 * au))**p
-
+    if heights is None:
+        heights = np.interp(radii, radius, get_disk_height(radius))
     #...
-
+    
     for r_p, h, mass in zip(radii, heights, masses):
         sig_gas *= kanagawa_profile(radius / r_p, alpha, h / r_p, mass)
 
@@ -403,7 +413,6 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     R1 = (fact_min_0 / 4 + 0.08) * K_prime**(1 / 4)
     R2 = 0.33 * K_prime**(1 / 4)
     fact = np.ones_like(x)
-    #print(np.shape(R1))
     mask = np.abs(x - 1) < R2
     fact[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32
     fact[np.abs(x - 1) < R1] = fact_min_0
