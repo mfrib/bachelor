@@ -1,2 +1,4 @@
 simple_slider_widget/simple_slider.egg-info/
 simple_slider_widget/simple_slider/__pycache__/
+.ipynb_checkpoints/
+__pycache__/
