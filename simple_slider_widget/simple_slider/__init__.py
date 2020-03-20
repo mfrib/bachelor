@@ -176,6 +176,8 @@ class Widget():
             self._slider_mp1.on_changed(self.update)
 
             self.marker_planet_dist1, = self.ax.loglog(self.r[100] / au, self.sigma[-1, 0], marker='o', linestyle='None', markersize=10, color="salmon", markeredgecolor='black')
+            self.R1_marker1, = self.ax.loglog(self.r[0] / au, self.sigma[-1,0], marker="x", linestyle='None', markersize=10)
+            self.R2_marker1, = self.ax.loglog(self.r[0] / au, self.sigma[-1,0], marker="x", linestyle='None', markersize=10)
 
         # Planet slider 2
         if self.planet[1] == 1:
@@ -220,16 +222,9 @@ class Widget():
         sig_min_0 = 1 / (1 + 0.04 * K)
         R1        = (sig_min_0 / 4 + 0.08) * K_prime**(1 / 4) * R_p
         R2        = 0.33 * K_prime**(1 / 4) * R_p
-        sig       = np.ones_like(self.r)
-
-        for i in range(len(self.r)):
-            if np.abs(self.r[i] - R_p) < R1:
-                sig[i] = sig_min_0
-            elif np.abs(self.r[i] - R_p) < R2:
-                sig[i] = 4.0 * K_prime**(-1 / 4) * np.abs(self.r[i] - R_p) / R_p - 0.32
         
-        # sig in units of sig_0
-        return sig, h_p, sig_min_0, K_prime
+        # return R1 and R2 in cgs units
+        return R1, R2
 
     # multiply power law with distubance of planets
 
@@ -255,7 +250,7 @@ class Widget():
             R_p += [10**self._slider_rp3.val * au]
             mass_ratios += [10**self._slider_mp3.val]
             
-        self.h_p = np.interp(R_p, self.r, self.h)
+        self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
         # self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
         
         # the model side
@@ -280,10 +275,17 @@ class Widget():
             # disturbance of 1st planet
             """
             # marker shows x_0 position on model line, label returns analytical function
+            R1, R2 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
+            R1 = [10**self._slider_rp1.val + R1 / au, 10**self._slider_rp1.val - R1 / au]
+            R2 = [10**self._slider_rp1.val + R2 / au, 10**self._slider_rp1.val - R2 / au]
+            self.R1_marker1.set_xdata(R1)
+            self.R2_marker1.set_xdata(R2)
             self.marker_planet_dist1.set_xdata(10**self._slider_rp1.val)
             self._ax_mp1.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
             self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.h_p[0] / au, fontsize='small'))
             self.marker_planet_dist1.set_ydata(np.interp(10**self._slider_rp1.val, self.r / au, model_A))
+            self.R1_marker1.set_ydata(np.interp(R1, self.r / au, model_A))
+            self.R2_marker1.set_ydata(np.interp(R2, self.r / au, model_A))
 
         if self.planet[1] == 1:
             """
@@ -327,7 +329,6 @@ class Widget():
 def get_disk_height(R):
     """
     calculate disk height profile from temperature model
-    
     """    
     M_star = M_sun
     q      = 0.5
@@ -371,6 +372,7 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
         surface density profile with planetary gaps in cgs units.
     """
     sig_gas = sig_0 * (radius / (100 * au))**p
+    
     if heights is None:
         heights = np.interp(radii, radius, get_disk_height(radius))
     #...
