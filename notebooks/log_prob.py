@@ -8,18 +8,16 @@ au = c.au.cgs.value
 def logp(params, x_data, y_data, n_planets):
 
     # convert parameter to physical values
-    x_min = np.log10(x_data[0] / au)
-    x_max = np.log10(x_data[-1] / au)
 
     # convert walkers from {0,1} to physical values for now
-    alpha = 10**(params[0] * 3 - 4)
-    sig0  = 10**(4 * (params[1] - 0.5))
-    p     = (2.0 * params[2]) - 2
+    alpha = params[0]
+    sig0  = params[1]
+    p     = params[2]
     R_p   = []
     mass_ratios = []
     for n in range(n_planets):
-        R_p         += [10**(params[3 + 2 * n] * (x_max - x_min) + x_min) * au]
-        mass_ratios += [10**(params[4 + 2 * n] * 2.0 - 4.0)]
+        R_p         += [params[3 + 2 * n]]
+        mass_ratios += [params[4 + 2 * n]]
 
     h_p = np.interp(R_p, x_data, get_disk_height(x_data))
 
@@ -34,7 +32,7 @@ def logp(params, x_data, y_data, n_planets):
 
     return logP
 
-
+"""
 def log_prior(params, n_planets):
     alpha = params[0]
     sig0  = params[1]
@@ -48,10 +46,37 @@ def log_prior(params, n_planets):
     if 0 < alpha < 1 and 0 < sig0 < 1 and 0 < p < 1 and 0 < R_p < 1 and 0 < mass_ratios < 1:
         return 0.0
     return -np.inf
+"""
 
+def conv_params_model(params, x_data, n_planets):
+    
+    x_min = np.log10(x_data[0]/ au) 
+    x_max = np.log10(x_data[-1]/ au) 
+    
+    params = params.T
+    
+    # convert walkers from {0,1} to physical values for now    
+    params[0] = 10**(params[0]*3 -4)
+    params[1] = 10**(4 * (params[1]-0.5))
+    params[2] = (2.0 * params[2]) - 2
+    for n in range(n_planets):
+        params[3+2*n] = 10**(params[3 + 2 * n] * (x_max - x_min) + x_min) * au
+        params[4+2*n] = 10**(params[4 + 2 * n] * 2.0 - 4.0)
+    
+    return params.T
 
-def log_prob(params, x_data, y_data, n_planets):
-    lp = log_prior(params, n_planets)
+def log_prior(params, x_data, n_planets, masks):
+    #mask_max = masks[0]
+    #mask_min = masks[1]
+    mask_max = conv_params_model(np.ones_like(params), x_data, n_planets)
+    mask_min = conv_params_model(np.zeros_like(params), x_data, n_planets)
+
+    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min):
+        return 0.0
+    return -np.inf
+
+def log_prob(params, x_data, y_data, n_planets, masks):
+    lp = log_prior(params, x_data, n_planets, masks)
     if not np.isfinite(lp):
         return -np.inf
-    return lp + logp(params, x_data, y_data, n_planets)
+    return logp(params, x_data, y_data, n_planets)
