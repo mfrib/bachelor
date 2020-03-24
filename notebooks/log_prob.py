@@ -16,7 +16,7 @@ def logp(params, x_data, y_data, n_planets):
     # calculate logP
 
     # logP = -0.5 * np.sum((y_data[0:-1] - sig_model[0:-1]) ** 2 / sigma2[0:-1] + np.log(2 * np.pi * sigma2[0:-1]))
-    logP = -0.5 * np.sum((y_data[0:-1] - sig_model[0:-1]) ** 2 / sigma2[0:-1])
+    logP = -0.5 * np.sum((y_data[0:] - sig_model[0:]) ** 2 / sigma2[0:])
 
     return logP
 
@@ -26,6 +26,7 @@ def params_format(params, x_data, y_data, n_planets):
     # convert parameters from list to correct input format for get_surface_density
     
     alpha = params[0]
+    
     sig0  = params[1]
     p     = params[2]
     R_p   = []
@@ -58,13 +59,16 @@ def conv_values(params, x_data, n_planets):
     
     params = params.T
     
-    # convert walkers from {0,1} to physical values for now    
+    # convert walkers from {0,1} to physical values for now   
+    
     params[0] = 10**(params[0]*3 -4)
+        
     params[1] = 10**(4 * (params[1]-0.5))
     params[2] = (2.0 * params[2]) - 2
     for n in range(n_planets):
         params[3+2*n] = 10**(params[3 + 2 * n] * (x_max - x_min) + x_min) * au
         params[4+2*n] = 10**(params[4 + 2 * n] * 2.0 - 4.0)
+    
     
     return params.T
 
@@ -73,17 +77,24 @@ def log_prior(params, x_data, n_planets, masks):
     mask_min = masks[1]
     #mask_max = conv_values(np.ones_like(params), x_data, n_planets)
     #mask_min = conv_values(np.zeros_like(params), x_data, n_planets)
-    
+    """
     if n_planets == 3: 
         R_p1, R_p2, R_p3 = params[3]*1.3, params[5], params[7]*0.7
     else:
         R_p1, R_p2, R_p3 = 1, 2, 3
-
+    """
     if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min):
         return 0.0
     return -np.inf
 
 def log_prob(params, x_data, y_data, n_planets, masks):
+    lp = log_prior(params, x_data, n_planets, masks)
+    if not np.isfinite(lp):
+        return -np.inf
+    return logp(params, x_data, y_data, n_planets)
+
+def log_prob_alpha(params, x_data, y_data, n_planets, masks, alpha_input=[]):
+    params = np.insert(params,0,alpha_input)
     lp = log_prior(params, x_data, n_planets, masks)
     if not np.isfinite(lp):
         return -np.inf
