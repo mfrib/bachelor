@@ -7,19 +7,7 @@ au = c.au.cgs.value
 
 def logp(params, x_data, y_data, n_planets):
 
-    # convert parameter to physical values
-
-    # convert walkers from {0,1} to physical values for now
-    alpha = params[0]
-    sig0  = params[1]
-    p     = params[2]
-    R_p   = []
-    mass_ratios = []
-    for n in range(n_planets):
-        R_p         += [params[3 + 2 * n]]
-        mass_ratios += [params[4 + 2 * n]]
-
-    h_p = np.interp(R_p, x_data, get_disk_height(x_data))
+    x_data, alpha, sig0, p, R_p, h_p, mass_ratios = params_format(params, x_data, y_data, n_planets)
 
     # construct the model
     sig_model = get_surface_density(x_data, alpha, sig0, p, R_p, h_p, mass_ratios)
@@ -32,23 +20,38 @@ def logp(params, x_data, y_data, n_planets):
 
     return logP
 
-"""
-def log_prior(params, n_planets):
+
+def params_format(params, x_data, y_data, n_planets):
+
+    # convert parameters from list to correct input format for get_surface_density
+    
     alpha = params[0]
     sig0  = params[1]
     p     = params[2]
     R_p   = []
     mass_ratios = []
+    h_p = []
+    
     for n in range(n_planets):
-        R_p         = params[3 + 2 * n]
-        mass_ratios = params[4 + 2 * n]
+        R_p         += [params[3 + 2 * n]]
+        mass_ratios += [params[4 + 2 * n]]
+        #h_p += [np.interp(R_p, x_data, get_disk_height(x_data))[n]]
+    """
+    R_p += [params[3]]
+    mass_ratios += [params[4]]
+    if n_planets == 3:
+        R_p += [params[5]]
+        R_p += [params[7]]
+        mass_ratios += [params[6]]
+        mass_ratios += [params[8]]
+    """    
+        
+    h_p = np.interp(R_p, x_data, get_disk_height(x_data))
+    
+    return x_data, alpha, sig0, p, R_p, h_p, mass_ratios
 
-    if 0 < alpha < 1 and 0 < sig0 < 1 and 0 < p < 1 and 0 < R_p < 1 and 0 < mass_ratios < 1:
-        return 0.0
-    return -np.inf
-"""
 
-def conv_params_model(params, x_data, n_planets):
+def conv_values(params, x_data, n_planets):
     
     x_min = np.log10(x_data[0]/ au) 
     x_max = np.log10(x_data[-1]/ au) 
@@ -66,10 +69,15 @@ def conv_params_model(params, x_data, n_planets):
     return params.T
 
 def log_prior(params, x_data, n_planets, masks):
-    #mask_max = masks[0]
-    #mask_min = masks[1]
-    mask_max = conv_params_model(np.ones_like(params), x_data, n_planets)
-    mask_min = conv_params_model(np.zeros_like(params), x_data, n_planets)
+    mask_max = masks[0]
+    mask_min = masks[1]
+    #mask_max = conv_values(np.ones_like(params), x_data, n_planets)
+    #mask_min = conv_values(np.zeros_like(params), x_data, n_planets)
+    
+    if n_planets == 3: 
+        R_p1, R_p2, R_p3 = params[3]*1.3, params[5], params[7]*0.7
+    else:
+        R_p1, R_p2, R_p3 = 1, 2, 3
 
     if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min):
         return 0.0
