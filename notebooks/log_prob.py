@@ -23,7 +23,7 @@ def logp(params, x_data, y_data, n_planets):
 
 def params_format(params, x_data, y_data, n_planets):
 
-    # convert parameters from list to correct input format for get_surface_density
+    # convert parameters from nparray to correct input format for get_surface_density
     
     alpha = params[0]
     
@@ -31,22 +31,18 @@ def params_format(params, x_data, y_data, n_planets):
     p     = params[2]
     R_p   = []
     mass_ratios = []
-    h_p = []
-    
+    #h_p = []
+       
     for n in range(n_planets):
         R_p         += [params[3 + 2 * n]]
         mass_ratios += [params[4 + 2 * n]]
         #h_p += [np.interp(R_p, x_data, get_disk_height(x_data))[n]]
     """
-    R_p += [params[3]]
-    mass_ratios += [params[4]]
-    if n_planets == 3:
-        R_p += [params[5]]
-        R_p += [params[7]]
-        mass_ratios += [params[6]]
-        mass_ratios += [params[8]]
-    """    
-        
+    other_params = params[3:].reshape(n_planets, 2)
+    R_p = other_params[:,0]
+    mass_ratios = other_params[:,1]
+    """ 
+    
     h_p = np.interp(R_p, x_data, get_disk_height(x_data))
     
     return x_data, alpha, sig0, p, R_p, h_p, mass_ratios
@@ -65,6 +61,7 @@ def conv_values(params, x_data, n_planets):
         
     params[1] = 10**(4 * (params[1]-0.5))
     params[2] = (2.0 * params[2]) - 2
+    
     for n in range(n_planets):
         params[3+2*n] = 10**(params[3 + 2 * n] * (x_max - x_min) + x_min) * au
         params[4+2*n] = 10**(params[4 + 2 * n] * 2.0 - 4.0)
@@ -94,7 +91,7 @@ def log_prob(params, x_data, y_data, n_planets, masks):
     return logp(params, x_data, y_data, n_planets)
 
 def log_prob_alpha(params, x_data, y_data, n_planets, masks, alpha_input=[]):
-    params = np.insert(params,0,alpha_input)
+    params = np.insert(params, 0, alpha_input)
     lp = log_prior(params, x_data, n_planets, masks)
     if not np.isfinite(lp):
         return -np.inf
