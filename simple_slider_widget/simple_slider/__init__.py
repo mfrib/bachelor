@@ -383,7 +383,7 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
     return sig_gas
 
 
-def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5, return_kanagawa_radii=False):
+def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     """Kanagawa planetary gap profile.
 
     Returns the Kanagawa profile for a planetary gap on the array
@@ -414,8 +414,6 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5, return_kana
     fact_min_0 = 1 / (1 + 0.04 * K)
     R1 = (fact_min_0 / 4 + 0.08) * K_prime**(1 / 4)
     R2 = 0.33 * K_prime**(1 / 4)
-    if return_kanagawa_radii == True:
-        return R1, R2    
     fact = np.ones_like(x)
     mask = np.abs(x - 1) < R2
     fact[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32

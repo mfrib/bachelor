@@ -32,12 +32,16 @@ def params_format(params, x_data, y_data, n_planets):
     R_p   = []
     mass_ratios = []
     #h_p = []
-       
+    """
+    R_p = params[3::2]
+    mass_ratios = params[4::2]
+    """
     for n in range(n_planets):
         R_p         += [params[3 + 2 * n]]
         mass_ratios += [params[4 + 2 * n]]
         #h_p += [np.interp(R_p, x_data, get_disk_height(x_data))[n]]
     """
+    
     other_params = params[3:].reshape(n_planets, 2)
     R_p = other_params[:,0]
     mass_ratios = other_params[:,1]
@@ -66,8 +70,8 @@ def conv_values(params, x_data, n_planets):
         params[3+2*n] = 10**(params[3 + 2 * n] * (x_max - x_min) + x_min) * au
         params[4+2*n] = 10**(params[4 + 2 * n] * 2.0 - 4.0)
     
-    
     return params.T
+
 
 def log_prior(params, x_data, n_planets, masks):
     mask_max = masks[0]
