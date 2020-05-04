@@ -257,7 +257,7 @@ class Widget():
 
         # the model side
 
-        sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, self.h_p, mass_ratios)
+        sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, self.h_p, mass_ratios)['sigma']
 
         return sig_gas
 
