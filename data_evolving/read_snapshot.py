@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.constants as c
-"""
+
 au = c.au.cgs.value
 M_sun = c.M_sun.cgs.value
 
@@ -27,4 +27,4 @@ a = [0,1,2,3,4,5,6,7,8]
 a = np.array(a)
 
 b = 10**a[5::2]
-print(b[1])
+print(b[1])"""

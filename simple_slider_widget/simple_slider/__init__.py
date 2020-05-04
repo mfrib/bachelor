@@ -36,18 +36,20 @@ class Widget():
 
         self.planet = np.concatenate((np.full(num_planets, 1), np.full(3, 0)))
 
-        # print(num_planets)
-        # print(self.planet[0])
 
         data_dir = pkg_resources.resource_filename(__name__, data_dir)
 
         self.r = (np.loadtxt(os.path.join(data_dir, 'radius.dat')))
         self.sigma = np.loadtxt(os.path.join(data_dir, 'sigma_averaged.dat'), unpack=1)
-        self.t = np.loadtxt(os.path.join(data_dir, 'time.dat'))
+        try:
+            self.t = np.loadtxt(os.path.join(data_dir, 'time.dat'))
+        except Exception:
+            self.sigma.shape = (len(self.sigma),1)
+            self.t = [0]
 
         # define disk properties, for now hard-coded
 
-        self.M_star = M_sun
+        self.M_star = 2.3*M_sun
         self.alpha  = 1e-3
         self.q      = 0.5
         self.T      = 20 * (self.r / (100 * au))**-self.q
@@ -62,7 +64,7 @@ class Widget():
         self.ax.set_xlabel(r'r [AU]')
         self.ax.set_ylabel(r'$\Sigma_\mathrm{g}[g/cm^2]$')
 
-        # CREATE SLIDER(S)
+        # CREATE SLIDERS
 
         # time slider size
 
@@ -132,7 +134,7 @@ class Widget():
         # slider for parameter T
 
         self._ax_T = self.fig.add_axes([slider_x0, slider_y0, slider_w, slider_h], facecolor="lightgoldenrodyellow")
-        self._slider_T = w.Slider(self._ax_T, "T", 0, 300, valinit=0, valfmt='%.0f')
+        self._slider_T = w.Slider(self._ax_T, "T", 0, len(self.t) - 0.99, valinit=0, valfmt='%.0f') # -0.99 instead of -1 to avaid error when there is no time set
         self._ax_T.set_title("T", fontsize='small')
         self._slider_T.on_changed(self.update)
 
@@ -153,7 +155,7 @@ class Widget():
         self._slider_Pow.on_changed(self.update)
 
         self._ax_alpha = self.fig.add_axes([alpha_slider_x, alpha_slider_y, alpha_slider_w, alpha_slider_h], facecolor="mistyrose")
-        self._slider_alpha = w.Slider(self._ax_alpha, "$\\alpha$", -4, -1, valinit=np.log10(self.alpha), valfmt='%.2f')
+        self._slider_alpha = w.Slider(self._ax_alpha, "$\\alpha$", -5, -1, valinit=np.log10(self.alpha), valfmt='%.2f')
         self._ax_alpha.set_title("$\\alpha$", fontsize='small')
         self._slider_alpha.on_changed(self.update)
 
@@ -330,7 +332,7 @@ def get_disk_height(R):
     """
     calculate disk height profile from temperature model
     """    
-    M_star = M_sun
+    M_star = 2.3*M_sun
     q      = 0.5
     T      = 20 * (R / (100 * au))**-q
     cs     = np.sqrt(k_b * T / (mu * m_p))
@@ -420,11 +422,13 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     fact[np.abs(x - 1) < R1] = fact_min_0
 
     # smoothing
-
+    """
     smooth = 2.5
     x_h    = (mass_ratio / 3.)**(1. / 3.)
     x_s    = smooth * x_h
     fact   = np.exp(np.log(fact) * np.exp(-0.5 * (x - 1)**4 / x_s**4))
+    #fact   = np.exp(np.log(fact) * np.exp(-(np.abs(x - 1)/2.3)**3 / R1**4))
+    """
 
     return fact
 
