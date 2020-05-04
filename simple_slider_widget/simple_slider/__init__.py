@@ -224,7 +224,7 @@ class Widget():
         sig_min_0 = 1 / (1 + 0.04 * K)
         R1        = (sig_min_0 / 4 + 0.08) * K_prime**(1 / 4) * R_p
         R2        = 0.33 * K_prime**(1 / 4) * R_p
-        
+
         # return R1 and R2 in cgs units
         return R1, R2
 
@@ -251,12 +251,12 @@ class Widget():
         if self.planet[2] == 1:
             R_p += [10**self._slider_rp3.val * au]
             mass_ratios += [10**self._slider_mp3.val]
-            
+
         self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
         # self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
-        
+
         # the model side
-        
+
         sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, self.h_p, mass_ratios)
 
         return sig_gas
@@ -327,11 +327,11 @@ class Widget():
         # planet simulations
 
         plt.draw()
-        
+
 def get_disk_height(R):
     """
     calculate disk height profile from temperature model
-    """    
+    """
     M_star = 2.3*M_sun
     q      = 0.5
     T      = 20 * (R / (100 * au))**-q
@@ -353,10 +353,10 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
 
     alpha : float
         turbulance parameter
-        
+
     sig_0 : float
         base surface density profile without power law (at r = 1)
-        
+
     p : float
         power to which radius is taken in surface density profile
 
@@ -368,21 +368,23 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
 
     masses : list
         the mass ratios of planet relative to star for each planet
-        
+
     Output:
     -------
         surface density profile with planetary gaps in cgs units.
     """
     sig_gas = sig_0 * (radius / (100 * au))**p
-    
+    R1 = []
+
     if heights is None:
         heights = np.interp(radii, radius, get_disk_height(radius))
-    #...
-    
-    for r_p, h, mass in zip(radii, heights, masses):
-        sig_gas *= kanagawa_profile(radius / r_p, alpha, h / r_p, mass)
 
-    return sig_gas
+    for r_p, h, mass in zip(radii, heights, masses):
+        kanagawa = kanagawa_profile(radius / r_p, alpha, h / r_p, mass)
+        sig_gas *= kanagawa['fact']
+        R1 += [kanagawa['R1']]
+
+    return {'sigma': sig_gas, 'R1': R1}
 
 
 def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
@@ -430,7 +432,7 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     #fact   = np.exp(np.log(fact) * np.exp(-(np.abs(x - 1)/2.3)**3 / R1**4))
     """
 
-    return fact
+    return {'fact': fact, 'R1': R1}
 
 
 def main():
