@@ -1,4 +1,9 @@
 simple_slider_widget/simple_slider.egg-info/
 simple_slider_widget/simple_slider/__pycache__/
+simple_slider_widget/simple_slider/txt_files/
 .ipynb_checkpoints/
 __pycache__/
+notebooks/figures_done/
+notebooks/figures/
+notebooks/__pycache__/
+notebooks/.ipynb_checkpoints/

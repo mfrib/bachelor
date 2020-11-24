@@ -17,7 +17,7 @@ mu    = 2.3
 
 class Widget():
 
-    def __init__(self, data_dir=None, num_planets=None):
+    def __init__(self, data_dir=None, num_planets=None, choose=None):
         """
         Initialize the widget to compare model and data
 
@@ -26,7 +26,18 @@ class Widget():
         """
 
         # Get the data
-
+        
+        switcher = {0:"data_1_planet", 1:"data_one_planet_a1e-2_M1e-3",2:"data_one_planet_a1e-2_M4e-4",
+            3:"data_one_planet_a1e-3_M1e-3",4:"data_one_planet_a1e-3_M4e-4", 
+            5:"data_planets_scalefree_a1e-2_mu3e-3_r100", 6:"data_planets_scalefree_a1e-2_mu1e-3_r100", 
+            7:"data_planets_scalefree_a1e-2_mu3e-4_r100", 8:"data_planets_scalefree_a1e-3_mu3e-3_r100", 
+            9:"data_planets_scalefree_a1e-3_mu1e-3_r100", 10:"data_planets_scalefree_a1e-3_mu3e-4_r100",
+            11:"data_planets_scalefree_a1e-4_mu3e-3_r100",12:"data_planets_scalefree_a1e-4_mu1e-3_r100", 
+            13:"data_planets_scalefree_a1e-4_mu3e-4_r100"}
+        
+        if choose is not None:
+            data_dir = switcher[choose]
+        
         if data_dir is None:
             data_dir = 'data_1_planet'
 
@@ -51,7 +62,7 @@ class Widget():
 
         self.M_star = 2.3*M_sun
         self.alpha  = 1e-3
-        self.q      = 0.5
+        self.q      = 0.85
         self.T      = 20 * (self.r / (100 * au))**-self.q
         self.cs     = np.sqrt(k_b * self.T / (mu * m_p))
         self.om     = np.sqrt(G * self.M_star / self.r**3)
@@ -134,7 +145,7 @@ class Widget():
         # slider for parameter T
 
         self._ax_T = self.fig.add_axes([slider_x0, slider_y0, slider_w, slider_h], facecolor="lightgoldenrodyellow")
-        self._slider_T = w.Slider(self._ax_T, "T", 0, len(self.t) - 0.99, valinit=0, valfmt='%.0f') # -0.99 instead of -1 to avaid error when there is no time set
+        self._slider_T = w.Slider(self._ax_T, "T", 0, len(self.t) - 0.99, valinit=self.t[-1], valfmt='%.0f') # -0.99 instead of -1 to avoid error when there is no time set
         self._ax_T.set_title("T", fontsize='small')
         self._slider_T.on_changed(self.update)
 
@@ -150,7 +161,7 @@ class Widget():
         self._slider_sigma.on_changed(self.update)
 
         self._ax_Pow = self.fig.add_axes([slider_x1, slider_y1, slider_w1, slider_h1], facecolor="lightsalmon")
-        self._slider_Pow = w.Slider(self._ax_Pow, "p", -2, 0, valinit=-0.8, valfmt='%.2f')
+        self._slider_Pow = w.Slider(self._ax_Pow, "p", 0, 1.5, valinit=0.8, valfmt='%.2f')
         self._ax_Pow.set_title("Power", fontsize='small')
         self._slider_Pow.on_changed(self.update)
 
@@ -252,14 +263,14 @@ class Widget():
             R_p += [10**self._slider_rp3.val * au]
             mass_ratios += [10**self._slider_mp3.val]
 
-        self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
-        # self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
+        #self.h_p = np.interp(R_p, self.r, get_disk_height(self.r))
+        self.h_p = get_disk_height(np.array(R_p))
 
         # the model side
 
         sig_gas = get_surface_density(self.r, alpha, sig0, p, R_p, self.h_p, mass_ratios)
 
-        return sig_gas
+        return sig_gas['sigma']
 
     def update(self, event):
         """
@@ -318,11 +329,11 @@ class Widget():
         # update our slider title
 
         self._ax_T.set_title("t= %.3g a" % (self.t[int(self._slider_T.val)] / (365.25 * 24 * 3600)), fontsize='small')
-        self._ax_sigma.set_title("$\\Sigma_0 = 10^{{{:.2g}}}$".format(self._slider_sigma.val, fontsize='small'))
+        self._ax_sigma.set_title("$\\Sigma_0 = 10^{{{:.2g}}} = {{{:.3g}}}$".format(self._slider_sigma.val, 10**self._slider_sigma.val, fontsize='small'))
         self._ax_Pow.set_title("$p = {{{:.2g}}}$".format(self._slider_Pow.val), fontsize='small')
         self._ax_alpha.set_title("$\\alpha = 10^{{{:.2g}}}$".format(self._slider_alpha.val, fontsize='small'))
-        self.model_line_A.set_label(r'$ \Sigma_0 \cdot r^a = {{{:0.4g}}} \cdot (\frac{{r}}{{100AU}})^{{{:.2g}}}$'.format(10**self._slider_sigma.val, self._slider_Pow.val))
-        self.ax.legend(fontsize=13)
+        #self.model_line_A.set_label(r'$ \Sigma_0 \cdot r^a = {{{:0.4g}}} \cdot (\frac{{r}}{{100AU}})^{{{:.2g}}}$'.format(10**self._slider_sigma.val, self._slider_Pow.val))
+        #self.ax.legend(fontsize=13)
 
         # planet simulations
 
@@ -333,8 +344,9 @@ def get_disk_height(R):
     calculate disk height profile from temperature model
     """
     M_star = 2.3*M_sun
-    q      = 0.5
+    q      = 0.8
     T      = 20 * (R / (100 * au))**-q
+    #T      = 40.12 * (R / (100 * au))**-q
     cs     = np.sqrt(k_b * T / (mu * m_p))
     om     = np.sqrt(G * M_star / R**3)
     h      = cs / om
@@ -373,17 +385,20 @@ def get_surface_density(radius, alpha, sig_0, p, radii, heights, masses):
     -------
         surface density profile with planetary gaps in cgs units.
     """
-    sig_gas = sig_0 * (radius / (100 * au))**p
-    R1 = []
+    sig_gas = sig_0 * (radius / (100 * au))**(-p)
+    
 
     if heights is None:
-        heights = np.interp(radii, radius, get_disk_height(radius))
+        #heights = np.interp(radii, radius, get_disk_height(radius))
+        heights = get_disk_height(np.array(radii))
 
     for r_p, h, mass in zip(radii, heights, masses):
         kanagawa = kanagawa_profile(radius / r_p, alpha, h / r_p, mass)
         sig_gas *= kanagawa['fact']
-        R1 += [kanagawa['R1']]
-
+        #R1 += [kanagawa['R1']]
+        
+    R1 = kanagawa['R1']
+    
     return {'sigma': sig_gas, 'R1': R1}
 
 
@@ -414,25 +429,26 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     """
 
     K_prime = mass_ratio**2 * aspect_ratio**-3 / alpha
-    K = K_prime / (aspect_ratio**2)
+    K = K_prime * (aspect_ratio**-2)
     fact_min_0 = 1 / (1 + 0.04 * K)
     R1 = (fact_min_0 / 4 + 0.08) * K_prime**(1 / 4)
     R2 = 0.33 * K_prime**(1 / 4)
     fact = np.ones_like(x)
     mask = np.abs(x - 1) < R2
     fact[mask] = 4.0 * K_prime**(-1 / 4) * np.abs(x[mask] - 1) - 0.32
-    fact[np.abs(x - 1) < R1] = fact_min_0
+    mask = np.abs(x - 1) < R1
+    fact[mask] = fact_min_0
 
     # smoothing
-    """
+    
     smooth = 2.5
     x_h    = (mass_ratio / 3.)**(1. / 3.)
     x_s    = smooth * x_h
     fact   = np.exp(np.log(fact) * np.exp(-0.5 * (x - 1)**4 / x_s**4))
     #fact   = np.exp(np.log(fact) * np.exp(-(np.abs(x - 1)/2.3)**3 / R1**4))
-    """
+    """"""
 
-    return {'fact': fact, 'R1': R1}
+    return {'fact': fact, 'R1': ~mask}
 
 
 def main():
@@ -444,9 +460,11 @@ def main():
                         help='path to the data files', type=str, default=None)
     PARSER.add_argument('-n', '--number-planets',
                         help='number of planets to model', type=int, choices=[0, 1, 2, 3])
+    PARSER.add_argument('-c', '--choice',
+                        help='alternative choice for the data files', type=int, choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
     ARGS = PARSER.parse_args()
 
-    _ = Widget(data_dir=ARGS.data_path, num_planets=ARGS.number_planets)
+    _ = Widget(data_dir=ARGS.data_path, num_planets=ARGS.number_planets, choose=ARGS.choice)
     plt.show()
 
 
