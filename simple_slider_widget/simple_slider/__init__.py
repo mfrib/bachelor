@@ -440,13 +440,13 @@ def kanagawa_profile(x, alpha, aspect_ratio, mass_ratio, smooth=2.5):
     fact[mask] = fact_min_0
 
     # smoothing
-    
+    """
     smooth = 2.5
     x_h    = (mass_ratio / 3.)**(1. / 3.)
     x_s    = smooth * x_h
     fact   = np.exp(np.log(fact) * np.exp(-0.5 * (x - 1)**4 / x_s**4))
     #fact   = np.exp(np.log(fact) * np.exp(-(np.abs(x - 1)/2.3)**3 / R1**4))
-    """"""
+    """
 
     return {'fact': fact, 'R1': ~mask}
 
