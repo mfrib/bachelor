@@ -22,8 +22,8 @@ def logp(params, x_data, y_data, n_planets):
 
     # calculate logP
 
-    #logP = -0.5 * np.sum((y_data[mask] - sig_model[mask]) ** 2 / sigma2[mask])
-    logP = -0.5 * np.sum((y_data - sig_model) ** 2 / sigma2)
+    logP = -0.5 * np.sum((y_data[mask] - sig_model[mask]) ** 2 / sigma2[mask])
+    #logP = -0.5 * np.sum((y_data - sig_model) ** 2 / sigma2)
 
     return logP
 
