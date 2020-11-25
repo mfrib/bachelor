@@ -345,8 +345,8 @@ def get_disk_height(R):
     """
     M_star = 2.3*M_sun
     q      = 0.8
-    T      = 20 * (R / (100 * au))**-q
-    #T      = 40.12 * (R / (100 * au))**-q
+    #T      = 20 * (R / (100 * au))**-q
+    T      = 40.12 * (R / (100 * au))**-q
     cs     = np.sqrt(k_b * T / (mu * m_p))
     om     = np.sqrt(G * M_star / R**3)
     h      = cs / om
