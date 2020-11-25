@@ -85,16 +85,16 @@ def log_prior(params, x_data, n_planets, masks):
     #masks = [np.array([1.00000000e-01, 1.00000000e+02, 0.00000000e+00, 5.98391483e+15, 1.00000000e-02]),np.array([ 1.00000000e-04,  1.00000000e-02, -2.00000000e+00,  2.99195741e+14, 1.00000000e-04])]
     mask_max = masks[0]
     mask_min = masks[1]
-    """
+    
     if n_planets == 3:
         R_p1, R_p2, R_p3 = params[3], params[5], params[7]
         #np.append(mask_max,[mask_max[3,4],[mask_max[3,4]])
         #np.append(mask_min,[mask_min[3,4],[mask_min[3,4]])
     else:
         R_p1, R_p2, R_p3 = 7, 10, 15
-    """ 
+    """ """
 
-    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min): #and 0.5*R_p2 < R_p1 < 0.8*R_p2 and 1.25*R_p2 < R_p3 < 2*R_p2:
+    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min) and 0.5*R_p2 < R_p1 < 0.8*R_p2 and 1.25*R_p2 < R_p3 < 2*R_p2:
         return 0.0
     return -np.inf
 
