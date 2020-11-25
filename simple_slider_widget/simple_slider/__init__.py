@@ -189,8 +189,8 @@ class Widget():
             self._slider_mp1.on_changed(self.update)
 
             self.marker_planet_dist1, = self.ax.loglog(self.r[100] / au, self.sigma[-1, 0], marker='o', linestyle='None', markersize=10, color="salmon", markeredgecolor='black')
-            self.R1_marker1, = self.ax.loglog(self.r[0] / au, self.sigma[-1,0], marker="x", linestyle='None', markersize=10)
-            self.R2_marker1, = self.ax.loglog(self.r[0] / au, self.sigma[-1,0], marker="x", linestyle='None', markersize=10)
+            """self.R1_marker1, = self.ax.loglog(self.r[0] / au, self.sigma[-1,0], marker="x", linestyle='None', markersize=10)
+            self.R2_marker1, = self.ax.loglog(self.r[0] / au, self.sigma[-1,0], marker="x", linestyle='None', markersize=10)"""
 
         # Planet slider 2
         if self.planet[1] == 1:
@@ -288,17 +288,17 @@ class Widget():
             # disturbance of 1st planet
             """
             # marker shows x_0 position on model line, label returns analytical function
-            R1, R2 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
+            """R1, R2 = self.f(10**self._slider_mp1.val, 10**self._slider_rp1.val * au)
             R1 = [10**self._slider_rp1.val + R1 / au, 10**self._slider_rp1.val - R1 / au]
             R2 = [10**self._slider_rp1.val + R2 / au, 10**self._slider_rp1.val - R2 / au]
             self.R1_marker1.set_xdata(R1)
-            self.R2_marker1.set_xdata(R2)
+            self.R2_marker1.set_xdata(R2)"""
             self.marker_planet_dist1.set_xdata(10**self._slider_rp1.val)
             self._ax_mp1.set_title("$M = {{{:.2E}}} M_\\odot$".format(10**self._slider_mp1.val, fontsize='small'))
             self._ax_rp1.set_title("$R_P = {{{:.1f}}} AU, h_P = {{{:.2f}}} AU$".format(10**self._slider_rp1.val, self.h_p[0] / au, fontsize='small'))
             self.marker_planet_dist1.set_ydata(np.interp(10**self._slider_rp1.val, self.r / au, model_A))
-            self.R1_marker1.set_ydata(np.interp(R1, self.r / au, model_A))
-            self.R2_marker1.set_ydata(np.interp(R2, self.r / au, model_A))
+            """self.R1_marker1.set_ydata(np.interp(R1, self.r / au, model_A))
+            self.R2_marker1.set_ydata(np.interp(R2, self.r / au, model_A))"""
 
         if self.planet[1] == 1:
             """
