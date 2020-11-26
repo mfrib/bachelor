@@ -9,3 +9,4 @@ notebooks/flatsamples/
 notebooks/samples/
 notebooks/__pycache__/
 notebooks/.ipynb_checkpoints/
+notebooks/visualizing_samples.ipynb
