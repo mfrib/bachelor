@@ -14,6 +14,7 @@ def logp(params, x_data, y_data, n_planets):
     sig_model = model['sigma']
     R1        = model['R1']
     sigma2    = (0.05 * y_data)**2
+    #sigma2    = (y_data[1])**2
 
     # exclude region around planet(s)
 
@@ -22,8 +23,8 @@ def logp(params, x_data, y_data, n_planets):
 
     # calculate logP
 
-    #logP = -0.5 * np.sum((y_data[mask] - sig_model[mask]) ** 2 / sigma2[mask])
-    logP = -0.5 * np.sum((y_data - sig_model) ** 2 / sigma2)
+    logP = -0.5 * np.sum((y_data[mask] - sig_model[mask]) ** 2 / sigma2[mask])
+    #logP = -0.5 * np.sum((y_data - sig_model) ** 2 / sigma2)
 
     return logP
 
@@ -62,8 +63,8 @@ def params_format(params, x_data, y_data, n_planets):
 
 def conv_values(params, x_data, n_planets):
 
-    x_min = np.log10(x_data[0]/ au)
-    x_max = np.log10(x_data[-1]/ au)
+    x_min = np.log10(x_data[0])
+    x_max = np.log10(x_data[-1])
 
     params = params.T
 
@@ -75,7 +76,7 @@ def conv_values(params, x_data, n_planets):
     params[2] = (1.5 * params[2])
 
     for n in range(n_planets):
-        params[3+2*n] = 10**(params[3 + 2 * n] * (x_max - x_min) + x_min) * au
+        params[3+2*n] = 10**(params[3 + 2 * n] * (x_max - x_min) + x_min)
         params[4+2*n] = 10**(params[4 + 2 * n] * 2.5 - 4.5)
 
     return params.T
@@ -94,7 +95,7 @@ def log_prior(params, x_data, n_planets, masks):
         R_p1, R_p2, R_p3 = 7, 10, 15
     """ """
 
-    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min) and 0.5*R_p2 < R_p1 < 0.8*R_p2 and 1.25*R_p2 < R_p3 < 2*R_p2:
+    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min):# and 0.5*R_p2 < R_p1 < 0.8*R_p2 and 1.25*R_p2 < R_p3 < 2*R_p2:
         return 0.0
     return -np.inf
 

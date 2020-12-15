@@ -5,8 +5,10 @@ simple_slider_widget/simple_slider/txt_files/
 __pycache__/
 notebooks/figures_done/
 notebooks/figures/
+notebooks/figures_cm/
 notebooks/flatsamples/
 notebooks/samples/
+notebooks/samples_co/
 notebooks/__pycache__/
 notebooks/.ipynb_checkpoints/
 notebooks/visualizing_samples.ipynb
