@@ -23,8 +23,8 @@ def logp(params, x_data, y_data, n_planets):
 
     # calculate logP
 
-    logP = -0.5 * np.sum((y_data[mask] - sig_model[mask]) ** 2 / sigma2[mask])
-    #logP = -0.5 * np.sum((y_data - sig_model) ** 2 / sigma2)
+    #logP = -0.5 * np.sum((y_data[mask] - sig_model[mask]) ** 2 / sigma2[mask])
+    logP = -0.5 * np.sum((y_data - sig_model) ** 2 / sigma2)
 
     return logP
 
@@ -95,7 +95,7 @@ def log_prior(params, x_data, n_planets, masks):
         R_p1, R_p2, R_p3 = 7, 10, 15
     """ """
 
-    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min):# and 0.5*R_p2 < R_p1 < 0.8*R_p2 and 1.25*R_p2 < R_p3 < 2*R_p2:
+    if np.all(np.array(params) < mask_max) and np.all(np.array(params) > mask_min):# and 0.3*R_p2 < R_p1 < 0.8*R_p2 and 1.2*R_p2 < R_p3 < 3*R_p2:
         return 0.0
     return -np.inf
 

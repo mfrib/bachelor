@@ -32,8 +32,8 @@ class Widget():
             5:"data_planets_scalefree_a1e-2_mu3e-3_r100", 6:"data_planets_scalefree_a1e-2_mu1e-3_r100", 
             7:"data_planets_scalefree_a1e-2_mu3e-4_r100", 8:"data_planets_scalefree_a1e-3_mu3e-3_r100", 
             9:"data_planets_scalefree_a1e-3_mu1e-3_r100", 10:"data_planets_scalefree_a1e-3_mu3e-4_r100",
-            11:"data_planets_scalefree_a1e-4_mu3e-3_r100",12:"data_planets_scalefree_a1e-4_mu1e-3_r100", 
-            13:"data_planets_scalefree_a1e-4_mu3e-4_r100"}
+            11:"data_planets_scalefree_a1e-4_mu3e-3_r100", 12:"data_planets_scalefree_a1e-4_mu1e-3_r100", 
+            13:"data_planets_scalefree_a1e-4_mu3e-4_r100", 14:"data_planets_scalefree_3planets"}
         
         if choose is not None:
             data_dir = switcher[choose]
@@ -229,6 +229,7 @@ class Widget():
     def f(self, mass_rel, R_p):
 
         temp      = 20 * (R_p / (100 * au))**-self.q
+        #temp      = 40.12 * (R_p / (100 * au))**-0.5
         cs_p      = np.sqrt(k_b * temp / (mu * m_p))
         h_p       = cs_p / np.sqrt(G * self.M_star / R_p**3)
         K_prime   = (mass_rel)**2 * (h_p / R_p)**-3 * 1 / (10**self._slider_alpha.val)
@@ -348,8 +349,8 @@ def get_disk_height(R):
     """
     M_star = 2.3*M_sun
     q      = 0.8
-    #T      = 20 * (R / (100 * au))**-0.8
-    T      = 40.12 * (R / (100 * au))**-0.5
+    T      = 20 * (R / (100 * au))**-0.8
+    #T      = 40.12 * (R / (100 * au))**-0.5
     cs     = np.sqrt(k_b * T / (mu * m_p))
     om     = np.sqrt(G * M_star / R**3)
     h      = cs / om
@@ -464,7 +465,7 @@ def main():
     PARSER.add_argument('-n', '--number-planets',
                         help='number of planets to model', type=int, choices=[0, 1, 2, 3])
     PARSER.add_argument('-c', '--choice',
-                        help='alternative choice for the data files', type=int, choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+                        help='alternative choice for the data files', type=int, choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     ARGS = PARSER.parse_args()
 
     _ = Widget(data_dir=ARGS.data_path, num_planets=ARGS.number_planets, choose=ARGS.choice)
