@@ -4,8 +4,9 @@ simple_slider_widget/simple_slider/txt_files/
 .ipynb_checkpoints/
 __pycache__/
 notebooks/figures_done/
-notebooks/figures/
 notebooks/log/
+notebooks/misc/
+notebooks/unused/
 notebooks/sig2D_figures/
 notebooks/figures_cm/
 notebooks/flatsamples/
